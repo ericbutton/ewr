@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with 3D GLB Model</title>
+    <title>Mapbox with Corrected 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -37,11 +37,19 @@
                 const renderer = new THREE.WebGLRenderer({
                     canvas: map.getCanvas(),
                     context: mbxContext.gl,
-                    antialias: false, // Disable antialiasing to reduce load
-                    powerPreference: 'low-power'
+                    antialias: true, // Enable antialiasing for better quality
+                    powerPreference: 'high-performance'
                 });
 
                 renderer.autoClear = false;
+
+                // Add directional light to improve model appearance
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(0, 10, 10).normalize();
+                scene.add(directionalLight);
+
+                const ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
+                scene.add(ambientLight);
 
                 // Newark Airport center position
                 const modelOrigin = [-74.1745, 40.6895];
@@ -61,7 +69,10 @@
                         const model = gltf.scene;
 
                         // Scale and position the model
-                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10); // Adjust the scale if needed
+                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10);
+
+                        // Adjust the rotation to correct orientation
+                        model.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X-axis
                         model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
 
                         scene.add(model);
