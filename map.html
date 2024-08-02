@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Enlarged 3D GLB Model</title>
+    <title>Mapbox with Custom 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -68,18 +68,27 @@
                 // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'citation2.glb', // Replace with the correct path to your citation.glb file
+                    'citation.glb', // Replace with the correct path to your citation.glb file
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Scale the model up by a factor of 4, keeping proportions intact
-                        model.scale.set(modelScale * 20, modelScale * 20, modelScale * 20);
+                        // Apply custom material: gray color with emissive effect
+                        model.traverse(function (node) {
+                            if (node.isMesh) {
+                                node.material.color.set(0x808080); // Gray color
+                                node.material.emissive = new THREE.Color(0x808080); // Emissive gray
+                                node.material.emissiveIntensity = 0.6; // Emissive strength
+                            }
+                        });
+
+                        // Scale the model up by a factor of 5, keeping proportions intact
+                        model.scale.set(modelScale * 25, modelScale * 25, modelScale * 25);
 
                         // Correct orientation (assuming model is upright initially)
                         model.rotation.x = Math.PI / 2; // Rotate 90 degrees on X-axis
 
-                        // Position the model on the ground
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
+                        // Lower the model slightly below ground level
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z - modelScale * 5);
 
                         scene.add(model);
 
