@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Simple Cube</title>
+    <title>Mapbox with 3D Cube at Newark Airport</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -42,13 +42,28 @@
 
                 renderer.autoClear = false;
 
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                // Newark Airport center position
+                const modelOrigin = [-74.1745, 40.6895];
+                const modelAltitude = 0; // altitude in meters
+
+                // Convert geographic coordinates to Web Mercator coordinates
+                const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+
+                // Calculate the scale of the model in the scene
+                const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
+
+                // Create the cube and position it at the specified coordinates
+                const geometry = new THREE.BoxGeometry(100 * modelScale, 100 * modelScale, 100 * modelScale);
                 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
                 const cube = new THREE.Mesh(geometry, material);
 
+                // Set the cube's position using the Mercator coordinates
+                cube.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
+
                 scene.add(cube);
 
-                camera.position.set(0, 0, 5);
+                // Set the camera position to view the scene
+                camera.position.set(0, 0, 500 * modelScale);
 
                 this.scene = scene;
                 this.camera = camera;
