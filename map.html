@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Large 3D Cube at Newark Airport</title>
+    <title>Mapbox with 3D Cube and Axes Helper</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -42,6 +42,10 @@
 
                 renderer.autoClear = false;
 
+                // Add AxesHelper to check scene orientation
+                const axesHelper = new THREE.AxesHelper(500);
+                scene.add(axesHelper);
+
                 // Newark Airport center position
                 const modelOrigin = [-74.1745, 40.6895];
                 const modelAltitude = 0; // altitude in meters
@@ -52,7 +56,7 @@
                 // Calculate the scale of the model in the scene
                 const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
 
-                // Create a significantly larger cube
+                // Create a cube with a large size for visibility
                 const geometry = new THREE.BoxGeometry(1000 * modelScale, 1000 * modelScale, 1000 * modelScale);
                 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
                 const cube = new THREE.Mesh(geometry, material);
@@ -62,7 +66,7 @@
 
                 scene.add(cube);
 
-                // Set the camera position to view the larger cube
+                // Set the camera position to view the scene
                 camera.position.set(0, 0, 2000 * modelScale);
 
                 this.scene = scene;
