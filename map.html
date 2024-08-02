@@ -37,13 +37,13 @@
                 const renderer = new THREE.WebGLRenderer({
                     canvas: map.getCanvas(),
                     context: mbxContext.gl,
-                    antialias: true
+                    antialias: false // Disable antialiasing to reduce load
                 });
 
                 renderer.autoClear = false;
 
                 const modelOrigin = [-74.1745, 40.6895]; 
-                const modelAltitude = 0;
+                const modelAltitude = 1;
                 const modelRotate = [Math.PI / 2, 0, 0];
 
                 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
@@ -59,10 +59,10 @@
                 };
 
                 const loader = new THREE.GLTFLoader();
-                loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/sphere.glb',
+                loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/plane.glb',
                     function (gltf) {
                         const model = gltf.scene;
-                        model.scale.set(1, 1, 1); 
+                        model.scale.set(10, 10, 10); 
                         model.rotation.x = modelRotate[0];
                         model.rotation.y = modelRotate[1];
                         model.rotation.z = modelRotate[2];
