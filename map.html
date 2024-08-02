@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Adjusted 3D GLB Model</title>
+    <title>Mapbox with Enlarged 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -72,8 +72,8 @@
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Scale the model up by a factor of 2, keeping proportions intact
-                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10);
+                        // Scale the model up by a factor of 4, keeping proportions intact
+                        model.scale.set(modelScale * 20, modelScale * 20, modelScale * 20);
 
                         // Correct orientation (assuming model is upright initially)
                         model.rotation.x = Math.PI / 2; // Rotate 90 degrees on X-axis
