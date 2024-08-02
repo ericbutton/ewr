@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Fixed 3D GLB Model</title>
+    <title>Mapbox with citation.glb Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
         body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; width: 100%; height: 100%; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     </style>
 </head>
 <body>
@@ -68,18 +68,11 @@
                 // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb', // Replace with the correct URL of your GLB file
+                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb', // Replace with the correct path to your citation.glb file
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Apply a basic material for testing (override existing materials)
-                        model.traverse(function (node) {
-                            if (node.isMesh) {
-                                node.material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Basic green material
-                            }
-                        });
-
-                        // Scale and position the model, moderate scale, and position it on the ground
+                        // Scale and position the model on the ground
                         model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5); // Adjust the scale
                         model.rotation.x = Math.PI / 2; // Correct orientation
                         model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z); // Keep it on the ground
