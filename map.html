@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with citation.glb Model - Rendering Debug</title>
+    <title>Mapbox with citation.glb Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -11,141 +11,102 @@
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        #debug { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.8); padding: 10px; z-index: 1000; }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
-<div id="debug"></div>
 
 <script>
-    function log(message) {
-        console.log(message);
-        document.getElementById('debug').innerHTML += message + '<br>';
-    }
-
-    log('Script started');
-
     mapboxgl.accessToken = 'pk.eyJ1IjoiZXJpY2J1dHRvbiIsImEiOiJjazU4czY4bzQwaHJ6M2RvZWxodjRlNmNpIn0.hvLMwQMiUk6_1RoeyascnA';
     var map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [-74.1745, 40.6895],
-        zoom: 15,
-        pitch: 60,
-        bearing: -17.6
+        container: 'map', // container ID
+        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
+        zoom: 15, // starting zoom
+        pitch: 45, // Tilt the map for 3D effect
+        bearing: -17.6 // Rotate the map slightly
     });
 
-    log('Map initialized');
-
     map.on('load', function () {
-        log('Map loaded');
-        
         map.addLayer({
             id: '3d-airplane',
             type: 'custom',
             renderingMode: '3d',
             onAdd: function (map, mbxContext) {
-                log('onAdd function called');
-
                 const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 const renderer = new THREE.WebGLRenderer({
                     canvas: map.getCanvas(),
                     context: mbxContext.gl,
-                    antialias: true,
-                    alpha: true
+                    antialias: true, // Enable antialiasing for better quality
+                    powerPreference: 'high-performance',
+                    preserveDrawingBuffer: true // High-quality rendering
                 });
 
-                log('THREE.js scene, camera, and renderer initialized');
-
                 renderer.autoClear = false;
-                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setPixelRatio(window.devicePixelRatio); // Ensure high resolution
 
+                // Add directional light to improve model appearance
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
                 directionalLight.position.set(0, 10, 10).normalize();
                 scene.add(directionalLight);
 
-                const ambientLight = new THREE.AmbientLight(0x404040);
+                const ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
                 scene.add(ambientLight);
 
-                log('Lights added to the scene');
-
+                // Newark Airport center position
                 const modelOrigin = [-74.1745, 40.6895];
-                const modelAltitude = 0;
+                const modelAltitude = 0; // Altitude in meters
+
+                // Convert geographic coordinates to Web Mercator coordinates
                 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+
+                // Calculate the scale of the model in the scene
                 const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
 
-                log('Model coordinates calculated');
-
-                // Add a debug cube to the scene
-                const geometry = new THREE.BoxGeometry(100, 100, 100);
-                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-                const cube = new THREE.Mesh(geometry, material);
-                cube.position.set(0, 0, 50);
-                scene.add(cube);
-                log('Debug cube added to scene');
-
+                // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb',
+                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb', // Replace with the correct path to your citation.glb file
                     function (gltf) {
-                        log('Model loaded successfully');
                         const model = gltf.scene;
-                        model.scale.set(modelScale * 1000, modelScale * 1000, modelScale * 1000); // Increased scale
-                        model.rotation.x = Math.PI / 2;
-                        model.position.set(0, 0, 50); // Adjusted position
+
+                        // Scale and position the model on the ground
+                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5); // Adjust the scale
+                        model.rotation.x = Math.PI / 2; // Correct orientation
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z); // Keep it on the ground
+
                         scene.add(model);
-                        log('Model added to the scene');
+
+                        animate(); // Start the rendering loop
                     },
-                    function (xhr) {
-                        log('Model loading progress: ' + (xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
+                    undefined,
                     function (error) {
-                        log('Error loading model: ' + error);
+                        console.error('An error occurred while loading the GLB model', error);
                     }
                 );
 
                 this.scene = scene;
                 this.camera = camera;
                 this.renderer = renderer;
-                this.map = map;
 
-                this.modelTransform = {
-                    translateX: modelAsMercatorCoordinate.x,
-                    translateY: modelAsMercatorCoordinate.y,
-                    translateZ: modelAsMercatorCoordinate.z,
-                    rotateX: Math.PI / 2,
-                    rotateY: 0,
-                    rotateZ: 0,
-                    scale: modelScale * 1000 // Increased scale
-                };
+                // Animate and render the scene
+                function animate() {
+                    map.on('render', () => {
+                        const m = new THREE.Matrix4().fromArray(map.transform.customLayerMatrix());
+                        camera.projectionMatrix = m;
 
-                log('onAdd function completed');
+                        renderer.state.reset();
+                        renderer.render(scene, camera);
+                        map.triggerRepaint();
+                    });
+                }
             },
             render: function (gl, matrix) {
-                const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), this.modelTransform.rotateX);
-                const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), this.modelTransform.rotateY);
-                const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), this.modelTransform.rotateZ);
-
-                const m = new THREE.Matrix4().fromArray(matrix);
-                const l = new THREE.Matrix4()
-                    .makeTranslation(this.modelTransform.translateX, this.modelTransform.translateY, this.modelTransform.translateZ)
-                    .scale(new THREE.Vector3(this.modelTransform.scale, -this.modelTransform.scale, this.modelTransform.scale))
-                    .multiply(rotationX)
-                    .multiply(rotationY)
-                    .multiply(rotationZ);
-
-                this.camera.projectionMatrix = m.multiply(l);
-                this.renderer.state.reset();
-                this.renderer.render(this.scene, this.camera);
-                this.map.triggerRepaint();
-                log('Render function called'); // This will log every time the render function is called
+                // This part is handled by the animate function, no need for additional logic here
             }
         });
-        
-        log('3D layer added to map');
     });
 </script>
 
