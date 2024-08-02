@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with citation.glb Model - Debugging</title>
+    <title>Mapbox with citation.glb Model - Rendering Debug</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -33,7 +33,7 @@
         style: 'mapbox://styles/mapbox/streets-v11',
         center: [-74.1745, 40.6895],
         zoom: 15,
-        pitch: 45,
+        pitch: 60,
         bearing: -17.6
     });
 
@@ -50,7 +50,7 @@
                 log('onAdd function called');
 
                 const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
                 const renderer = new THREE.WebGLRenderer({
                     canvas: map.getCanvas(),
                     context: mbxContext.gl,
@@ -79,15 +79,23 @@
 
                 log('Model coordinates calculated');
 
+                // Add a debug cube to the scene
+                const geometry = new THREE.BoxGeometry(100, 100, 100);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.set(0, 0, 50);
+                scene.add(cube);
+                log('Debug cube added to scene');
+
                 const loader = new THREE.GLTFLoader();
                 loader.load(
                     'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb',
                     function (gltf) {
                         log('Model loaded successfully');
                         const model = gltf.scene;
-                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5);
+                        model.scale.set(modelScale * 1000, modelScale * 1000, modelScale * 1000); // Increased scale
                         model.rotation.x = Math.PI / 2;
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
+                        model.position.set(0, 0, 50); // Adjusted position
                         scene.add(model);
                         log('Model added to the scene');
                     },
@@ -102,7 +110,6 @@
                 this.scene = scene;
                 this.camera = camera;
                 this.renderer = renderer;
-
                 this.map = map;
 
                 this.modelTransform = {
@@ -112,7 +119,7 @@
                     rotateX: Math.PI / 2,
                     rotateY: 0,
                     rotateZ: 0,
-                    scale: modelScale
+                    scale: modelScale * 1000 // Increased scale
                 };
 
                 log('onAdd function completed');
@@ -134,6 +141,7 @@
                 this.renderer.state.reset();
                 this.renderer.render(this.scene, this.camera);
                 this.map.triggerRepaint();
+                log('Render function called'); // This will log every time the render function is called
             }
         });
         
