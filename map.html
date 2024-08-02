@@ -27,13 +27,11 @@
     });
 
     map.on('load', function () {
-        // Add a custom layer with a 3D airplane model
         map.addLayer({
             id: '3d-airplane',
             type: 'custom',
             renderingMode: '3d',
             onAdd: function (map, mbxContext) {
-                // Initialize the Three.js scene
                 const scene = new THREE.Scene();
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 const renderer = new THREE.WebGLRenderer({
@@ -44,15 +42,12 @@
 
                 renderer.autoClear = false;
 
-                // Define the position of the model
-                const modelOrigin = [-74.1745, 40.6895]; // Newark Airport center coordinates
+                const modelOrigin = [-74.1745, 40.6895]; 
                 const modelAltitude = 1;
-                const modelRotate = [Math.PI / 2, 0, 0]; // adjust rotation if needed
+                const modelRotate = [Math.PI / 2, 0, 0];
 
-                // Convert the origin to map coordinates
                 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
 
-                // Define the model transformation
                 const modelTransform = {
                     translateX: modelAsMercatorCoordinate.x,
                     translateY: modelAsMercatorCoordinate.y,
@@ -60,19 +55,26 @@
                     rotateX: modelRotate[0],
                     rotateY: modelRotate[1],
                     rotateZ: modelRotate[2],
-                    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 100 // adjust scale
+                    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 100 
                 };
 
                 const loader = new THREE.GLTFLoader();
-                loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/plane.glb', function (gltf) {
-                    const model = gltf.scene;
-                    model.scale.set(10, 10, 10); // adjust size
-                    model.rotation.x = modelRotate[0];
-                    model.rotation.y = modelRotate[1];
-                    model.rotation.z = modelRotate[2];
+                loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/plane.glb',
+                    function (gltf) {
+                        const model = gltf.scene;
+                        model.scale.set(10, 10, 10); 
+                        model.rotation.x = modelRotate[0];
+                        model.rotation.y = modelRotate[1];
+                        model.rotation.z = modelRotate[2];
 
-                    scene.add(model);
-                });
+                        scene.add(model);
+                        console.log('Model loaded successfully');
+                    },
+                    undefined,
+                    function (error) {
+                        console.error('An error occurred while loading the model', error);
+                    }
+                );
 
                 this.scene = scene;
                 this.camera = camera;
@@ -83,15 +85,12 @@
                 const scene = this.scene;
                 const camera = this.camera;
 
-                // Update camera matrix to follow Mapbox camera
                 const m = new THREE.Matrix4().fromArray(matrix);
                 camera.projectionMatrix = m;
 
-                // Clear the canvas and render the 3D scene
                 renderer.state.reset();
                 renderer.render(scene, camera);
 
-                // Request the next animation frame
                 map.triggerRepaint();
             }
         });
