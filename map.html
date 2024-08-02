@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Corrected 3D GLB Model</title>
+    <title>Mapbox with Enhanced 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -68,12 +68,18 @@
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Scale and position the model
-                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10);
+                        // Apply emissiveness to all materials in the model
+                        model.traverse(function (node) {
+                            if (node.isMesh) {
+                                node.material.emissive = new THREE.Color(0x222222); // Slightly glowing
+                                node.material.emissiveIntensity = 0.5; // Adjust emissive intensity
+                            }
+                        });
 
-                        // Adjust the rotation to correct orientation
-                        model.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X-axis
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
+                        // Scale and position the model, raise it slightly
+                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10);
+                        model.rotation.x = Math.PI / 2; // Correct orientation
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z + modelScale * 5); // Raise it slightly
 
                         scene.add(model);
 
