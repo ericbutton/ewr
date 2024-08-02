@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with Enhanced and Enlarged 3D GLB Model</title>
+    <title>Mapbox with Tilted 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -23,7 +23,9 @@
         container: 'map', // container ID
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
         center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
-        zoom: 15 // starting zoom
+        zoom: 15, // starting zoom
+        pitch: 45, // Tilt the map for 3D effect
+        bearing: -17.6 // Rotate the map slightly
     });
 
     map.on('load', function () {
@@ -70,18 +72,17 @@
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Apply emissiveness to all materials in the model
+                        // Apply a basic material for testing (override existing materials)
                         model.traverse(function (node) {
                             if (node.isMesh) {
-                                node.material.emissive = new THREE.Color(0x222222); // Slightly glowing
-                                node.material.emissiveIntensity = 0.5; // Adjust emissive intensity
+                                node.material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Basic green material
                             }
                         });
 
-                        // Scale and position the model, make it twice as big and raise it slightly
-                        model.scale.set(modelScale * 20, modelScale * 20, modelScale * 20); // Double the previous size
+                        // Scale and position the model, make it moderately large and raise it slightly
+                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5); // Adjust the scale
                         model.rotation.x = Math.PI / 2; // Correct orientation
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z + modelScale * 10); // Raise it slightly higher
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z + modelScale * 5); // Raise it slightly
 
                         scene.add(model);
 
