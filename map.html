@@ -46,7 +46,7 @@
 
                 // Define the position of the model
                 const modelOrigin = [-74.1745, 40.6895]; // Newark Airport center coordinates
-                const modelAltitude = 0;
+                const modelAltitude = 1;
                 const modelRotate = [Math.PI / 2, 0, 0]; // adjust rotation if needed
 
                 // Convert the origin to map coordinates
@@ -66,7 +66,7 @@
                 const loader = new THREE.GLTFLoader();
                 loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/plane.glb', function (gltf) {
                     const model = gltf.scene;
-                    model.scale.set(1, 1, 1); // adjust size
+                    model.scale.set(10, 10, 10); // adjust size
                     model.rotation.x = modelRotate[0];
                     model.rotation.y = modelRotate[1];
                     model.rotation.z = modelRotate[2];
