@@ -64,7 +64,7 @@
                 };
 
                 const loader = new THREE.GLTFLoader();
-                loader.load('https://github.com/ericbutton/ewr/raw/main/plane.glb', function (gltf) {
+                loader.load('https://cdn.jsdelivr.net/gh/ericbutton/ewr/plane.glb', function (gltf) {
                     const model = gltf.scene;
                     model.scale.set(1, 1, 1); // adjust size
                     model.rotation.x = modelRotate[0];
