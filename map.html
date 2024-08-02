@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with citation.glb Model</title>
+    <title>Mapbox with Adjusted 3D GLB Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -68,14 +68,18 @@
                 // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb', // Replace with the correct path to your citation.glb file
+                    'citation.glb', // Replace with the correct path to your citation.glb file
                     function (gltf) {
                         const model = gltf.scene;
 
-                        // Scale and position the model on the ground
-                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5); // Adjust the scale
-                        model.rotation.x = Math.PI / 2; // Correct orientation
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z); // Keep it on the ground
+                        // Scale the model up by a factor of 2, keeping proportions intact
+                        model.scale.set(modelScale * 10, modelScale * 10, modelScale * 10);
+
+                        // Correct orientation (assuming model is upright initially)
+                        model.rotation.x = Math.PI / 2; // Rotate 90 degrees on X-axis
+
+                        // Position the model on the ground
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
 
                         scene.add(model);
 
