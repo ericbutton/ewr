@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with 3D Cube at Newark Airport</title>
+    <title>Mapbox with Large 3D Cube at Newark Airport</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -52,8 +52,8 @@
                 // Calculate the scale of the model in the scene
                 const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
 
-                // Create the cube and position it at the specified coordinates
-                const geometry = new THREE.BoxGeometry(100 * modelScale, 100 * modelScale, 100 * modelScale);
+                // Create a significantly larger cube
+                const geometry = new THREE.BoxGeometry(1000 * modelScale, 1000 * modelScale, 1000 * modelScale);
                 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
                 const cube = new THREE.Mesh(geometry, material);
 
@@ -62,8 +62,8 @@
 
                 scene.add(cube);
 
-                // Set the camera position to view the scene
-                camera.position.set(0, 0, 500 * modelScale);
+                // Set the camera position to view the larger cube
+                camera.position.set(0, 0, 2000 * modelScale);
 
                 this.scene = scene;
                 this.camera = camera;
