@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mapbox with 3D GLB Model on Runway</title>
+    <title>Mapbox with 3D GLB Model on Runway - Single Map View</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
@@ -44,7 +44,8 @@
                     preserveDrawingBuffer: true // High-quality rendering
                 });
 
-                renderer.autoClear = false;
+                renderer.autoClear = true; // Ensure the canvas is cleared before rendering
+
                 renderer.setPixelRatio(window.devicePixelRatio); // Ensure high resolution
 
                 // Add directional light to improve model appearance
@@ -68,7 +69,7 @@
                 // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'cit3.glb', // Replace with the correct path to your citation.glb file
+                    'citation.glb', // Replace with the correct path to your citation.glb file
                     function (gltf) {
                         const model = gltf.scene;
 
@@ -89,133 +90,6 @@
 
                         // Position the model on the ground directly on the runway
                         model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
-
-                        scene.add(model);
-
-                        animate(); // Start the rendering loop
-                    },
-                    undefined,
-                    function (error) {
-                        console.error('An error occurred while loading the GLB model', error);
-                    }
-                );
-
-                this.scene = scene;
-                this.camera = camera;
-                this.renderer = renderer;
-
-                // Animate and render the scene
-                function animate() {
-                    map.on('render', () => {
-                        const m = new THREE.Matrix4().fromArray(map.transform.customLayerMatrix());
-                        camera.projectionMatrix = m;
-
-                        renderer.state.reset();
-                        renderer.render(scene, camera);
-                        map.triggerRepaint();
-                    });
-                }
-            },
-            render: function (gl, matrix) {
-                // This part is handled by the animate function, no need for additional logic here
-            }
-        });
-    });
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Mapbox with Custom 3D GLB Model</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    </style>
-</head>
-<body>
-
-<div id="map"></div>
-
-<script>
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZXJpY2J1dHRvbiIsImEiOiJjazU4czY4bzQwaHJ6M2RvZWxodjRlNmNpIn0.hvLMwQMiUk6_1RoeyascnA';
-    var map = new mapboxgl.Map({
-        container: 'map', // container ID
-        style: 'mapbox://styles/mapbox/streets-v11', // style URL
-        center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
-        zoom: 15, // starting zoom
-        pitch: 45, // Tilt the map for 3D effect
-        bearing: -17.6 // Rotate the map slightly
-    });
-
-    map.on('load', function () {
-        map.addLayer({
-            id: '3d-airplane',
-            type: 'custom',
-            renderingMode: '3d',
-            onAdd: function (map, mbxContext) {
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer({
-                    canvas: map.getCanvas(),
-                    context: mbxContext.gl,
-                    antialias: true, // Enable antialiasing for better quality
-                    powerPreference: 'high-performance',
-                    preserveDrawingBuffer: true // High-quality rendering
-                });
-
-                renderer.autoClear = false;
-                renderer.setPixelRatio(window.devicePixelRatio); // Ensure high resolution
-
-                // Add directional light to improve model appearance
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-                directionalLight.position.set(0, 10, 10).normalize();
-                scene.add(directionalLight);
-
-                const ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
-                scene.add(ambientLight);
-
-                // Newark Airport center position
-                const modelOrigin = [-74.1745, 40.6895];
-                const modelAltitude = 0; // Altitude in meters
-
-                // Convert geographic coordinates to Web Mercator coordinates
-                const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
-
-                // Calculate the scale of the model in the scene
-                const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
-
-                // Load the GLB model using GLTFLoader
-                const loader = new THREE.GLTFLoader();
-                loader.load(
-                    'cit3.glb', // Replace with the correct path to your citation.glb file
-                    function (gltf) {
-                        const model = gltf.scene;
-
-                        // Apply custom material: gray color with emissive effect
-                        model.traverse(function (node) {
-                            if (node.isMesh) {
-                                node.material.color.set(0x808080); // Gray color
-                                node.material.emissive = new THREE.Color(0x808080); // Emissive gray
-                                node.material.emissiveIntensity = 0.6; // Emissive strength
-                            }
-                        });
-
-                        // Scale the model up by a factor of 5, keeping proportions intact
-                        model.scale.set(modelScale * 25, modelScale * 25, modelScale * 25);
-
-                        // Correct orientation (assuming model is upright initially)
-                        model.rotation.x = Math.PI / 2; // Rotate 90 degrees on X-axis
-
-                        // Lower the model slightly below ground level
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z - modelScale * 5);
 
                         scene.add(model);
 
