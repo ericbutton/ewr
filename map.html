@@ -1,40 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <title>Mapbox with Simple Cube</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Three.js Cube</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     </style>
 </head>
 <body>
-    <script>
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
 
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
+<div id="map"></div>
 
-        camera.position.z = 5;
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZXJpY2J1dHRvbiIsImEiOiJjazU4czY4bzQwaHJ6M2RvZWxodjRlNmNpIn0.hvLMwQMiUk6_1RoeyascnA';
+    var map = new mapboxgl.Map({
+        container: 'map', // container ID
+        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
+        zoom: 15 // starting zoom
+    });
 
-        function animate() {
-            requestAnimationFrame(animate);
+    map.on('load', function () {
+        map.addLayer({
+            id: '3d-cube',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd: function (map, mbxContext) {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({
+                    canvas: map.getCanvas(),
+                    context: mbxContext.gl,
+                    antialias: false, // Disable antialiasing to reduce load
+                    powerPreference: 'low-power'
+                });
 
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
+                renderer.autoClear = false;
 
-            renderer.render(scene, camera);
-        }
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cube = new THREE.Mesh(geometry, material);
 
-        animate();
-    </script>
+                scene.add(cube);
+
+                camera.position.set(0, 0, 5);
+
+                this.scene = scene;
+                this.camera = camera;
+                this.renderer = renderer;
+            },
+            render: function (gl, matrix) {
+                const renderer = this.renderer;
+                const scene = this.scene;
+                const camera = this.camera;
+
+                const m = new THREE.Matrix4().fromArray(matrix);
+                camera.projectionMatrix = m;
+
+                renderer.state.reset();
+                renderer.render(scene, camera);
+
+                map.triggerRepaint();
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
