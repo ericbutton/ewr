@@ -2,10 +2,12 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>My Mapbox GL JS Map</title>
+    <title>My Mapbox GL JS Map with 3D Model</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
@@ -13,7 +15,6 @@
 </head>
 <body>
 
-    
 <div id="map"></div>
 
 <script>
@@ -21,8 +22,56 @@
     var map = new mapboxgl.Map({
         container: 'map', // container ID
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
-        center: [-74.0060, 40.7128], // starting position [lng, lat]
-        zoom: 12 // starting zoom
+        center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
+        zoom: 15 // starting zoom
+    });
+
+    map.on('load', function () {
+        // Add a custom layer with a 3D airplane model
+        map.addLayer({
+            id: '3d-airplane',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd: function (map, mbxContext) {
+                // Define the position of the model
+                const modelOrigin = [-74.1745, 40.6895]; // Newark Airport center coordinates
+                const modelAltitude = 0;
+                const modelRotate = [Math.PI / 2, 0, 0]; // adjust rotation if needed
+
+                // Convert the origin to map coordinates
+                const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+
+                // Define the model transformation
+                const modelTransform = {
+                    translateX: modelAsMercatorCoordinate.x,
+                    translateY: modelAsMercatorCoordinate.y,
+                    translateZ: modelAsMercatorCoordinate.z,
+                    rotateX: modelRotate[0],
+                    rotateY: modelRotate[1],
+                    rotateZ: modelRotate[2],
+                    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 100 // adjust scale
+                };
+
+                // Use THREE.js to render the model
+                const THREE = window.THREE;
+                const loader = new THREE.GLTFLoader();
+                loader.load('https://github.com/ericbutton/ewr/raw/main/plane.glb', function (gltf) { // Replace with the actual URL of your GLB model
+                    const model = gltf.scene;
+                    model.scale.set(1, 1, 1); // adjust size
+                    model.rotation.x = modelRotate[0];
+                    model.rotation.y = modelRotate[1];
+                    model.rotation.z = modelRotate[2];
+
+                    mbxContext.scene.add(model);
+                });
+            },
+            render: function (gl, matrix) {
+                mbxContext.camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
+                mbxContext.renderer.state.reset();
+                mbxContext.renderer.render(mbxContext.scene, mbxContext.camera);
+                mbxContext.map.triggerRepaint();
+            }
+        });
     });
 </script>
 
