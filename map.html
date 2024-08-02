@@ -20,12 +20,12 @@
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiZXJpY2J1dHRvbiIsImEiOiJjazU4czY4bzQwaHJ6M2RvZWxodjRlNmNpIn0.hvLMwQMiUk6_1RoeyascnA';
     var map = new mapboxgl.Map({
-        container: 'map', // container ID
-        style: 'mapbox://styles/mapbox/streets-v11', // style URL
-        center: [-74.1745, 40.6895], // Newark Airport center position [lng, lat]
-        zoom: 15, // starting zoom
-        pitch: 45, // Tilt the map for 3D effect
-        bearing: -17.6 // Rotate the map slightly
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [-74.1745, 40.6895],
+        zoom: 15,
+        pitch: 45,
+        bearing: -17.6
     });
 
     map.on('load', function () {
@@ -39,47 +39,38 @@
                 const renderer = new THREE.WebGLRenderer({
                     canvas: map.getCanvas(),
                     context: mbxContext.gl,
-                    antialias: true, // Enable antialiasing for better quality
+                    antialias: true,
+                    alpha: true,
                     powerPreference: 'high-performance',
-                    preserveDrawingBuffer: true // High-quality rendering
+                    preserveDrawingBuffer: true
                 });
 
                 renderer.autoClear = false;
-                renderer.setPixelRatio(window.devicePixelRatio); // Ensure high resolution
+                renderer.setPixelRatio(window.devicePixelRatio);
 
-                // Add directional light to improve model appearance
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
                 directionalLight.position.set(0, 10, 10).normalize();
                 scene.add(directionalLight);
 
-                const ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
+                const ambientLight = new THREE.AmbientLight(0x404040);
                 scene.add(ambientLight);
 
-                // Newark Airport center position
                 const modelOrigin = [-74.1745, 40.6895];
-                const modelAltitude = 0; // Altitude in meters
-
-                // Convert geographic coordinates to Web Mercator coordinates
+                const modelAltitude = 0;
                 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
-
-                // Calculate the scale of the model in the scene
                 const modelScale = modelAsMercatorCoordinate.meterInMercatorCoordinateUnits();
 
-                // Load the GLB model using GLTFLoader
                 const loader = new THREE.GLTFLoader();
                 loader.load(
-                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb', // Replace with the correct path to your citation.glb file
+                    'https://cdn.jsdelivr.net/gh/ericbutton/ewr/citation.glb',
                     function (gltf) {
                         const model = gltf.scene;
-
-                        // Scale and position the model on the ground
-                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5); // Adjust the scale
-                        model.rotation.x = Math.PI / 2; // Correct orientation
-                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z); // Keep it on the ground
-
+                        model.scale.set(modelScale * 5, modelScale * 5, modelScale * 5);
+                        model.rotation.x = Math.PI / 2;
+                        model.position.set(modelAsMercatorCoordinate.x, modelAsMercatorCoordinate.y, modelAsMercatorCoordinate.z);
                         scene.add(model);
 
-                        animate(); // Start the rendering loop
+                        animate();
                     },
                     undefined,
                     function (error) {
@@ -91,20 +82,40 @@
                 this.camera = camera;
                 this.renderer = renderer;
 
-                // Animate and render the scene
                 function animate() {
-                    map.on('render', () => {
-                        const m = new THREE.Matrix4().fromArray(map.transform.customLayerMatrix());
-                        camera.projectionMatrix = m;
-
-                        renderer.state.reset();
-                        renderer.render(scene, camera);
-                        map.triggerRepaint();
-                    });
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
                 }
+
+                this.map = map;
+
+                this.onResize = function() {
+                    const canvas = map.getCanvas();
+                    renderer.setSize(canvas.width, canvas.height);
+                    camera.aspect = canvas.width / canvas.height;
+                    camera.updateProjectionMatrix();
+                };
+
+                window.addEventListener('resize', this.onResize);
+                this.onResize();
             },
             render: function (gl, matrix) {
-                // This part is handled by the animate function, no need for additional logic here
+                const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+                const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), 0);
+                const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), 0);
+
+                const m = new THREE.Matrix4().fromArray(matrix);
+                const l = new THREE.Matrix4()
+                    .makeTranslation(this.modelTransform.translateX, this.modelTransform.translateY, this.modelTransform.translateZ)
+                    .scale(new THREE.Vector3(this.modelTransform.scale, -this.modelTransform.scale, this.modelTransform.scale))
+                    .multiply(rotationX)
+                    .multiply(rotationY)
+                    .multiply(rotationZ);
+
+                this.camera.projectionMatrix = m.multiply(l);
+                this.renderer.state.reset();
+                this.renderer.render(this.scene, this.camera);
+                this.map.triggerRepaint();
             }
         });
     });
